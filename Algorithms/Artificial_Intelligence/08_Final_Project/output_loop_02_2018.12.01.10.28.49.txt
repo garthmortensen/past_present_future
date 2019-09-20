@@ -1,0 +1,21 @@
+N, 194
+Normal ratio, 0.51546
+Sick ratio, 0.48454
+
+Normal count, 100
+Pneumonia count, 94
+
+imagesize, 100  100
+
+epochs, 100
+minibatch, 15
+
+accuracy, 0.98276
+precision, 0.96774
+recall, 1
+fscore, 0.98361
+
+TP0, 30
+TN0, 27
+FP0, 1
+FN0, 0
