@@ -1,0 +1,73 @@
+#CSIS734-01 Data Mining & Predictive Analytics
+#Garth Mortensen, mort0052@stthomas.edu
+#Assignment 7, Naive Bayes Classification
+
+#INSTALL AND LOAD LIBRARIES############################
+#install required packages
+#install.packages("libcoin")
+
+#Load packages
+#library()
+#Originally faced issues loading RWeka due to rJava being x32 instead of x64. Had to update Java.
+#shell.exec("https://stackoverflow.com/questions/42258473/error-package-or-namespace-load-failed-for-rjava")
+library(rJava)
+
+
+#LOAD DATA#############################################
+#desktop path
+#df <- read.csv("G:/Google Drive/aStThomas/5DataMiningAndPredictiveAnalytics/Assignments/6/Titanic_DM_Replaced.csv", header = TRUE, stringsAsFactors = TRUE)
+#laptop path
+df <- read.csv("C:/Users/G/Google Drive/aStThomas/5DataMiningAndPredictiveAnalytics/Assignments/6/Titanic_DM_Replaced.csv", header = TRUE, stringsAsFactors = TRUE)
+#View(df)
+
+#First column to categorical
+#categorical variables are called factors in R.
+#Because I'm loading categorical variables, I need to first convert them. 
+#R's default behavior when creating data frames is to convert all characters into factors. 
+#But column one is integer.
+df$Passenger <- as.factor(df$Passenger)
+#column 1 is now compatible.
+
+
+#FIT MODEL##########################################
+#This appears to be a complete tutorial on C4.5 decision tree and end visualization.
+#On C4.5   http://data-mining.business-intelligence.uoc.edu/home/j48-decision-tree
+#Working example! http://data-mining.business-intelligence.uoc.edu/home/j48-decision-tree
+
+#The C4.5 algorithm is an extension of the ID3 algorithm and constructs a decision tree to 
+#maximize information gain (difference in entropy).
+#The following demonstrates the C4.5 (called J48 in Weka) decision tree method.
+#As seen at https://cran.r-project.org/web/packages/RWeka/RWeka.pdf
+#J48 generates unpruned or pruned C4.5 decision trees (Quinlan, 1993).
+
+fit <- J48(Survived~., data=df) #Must use ~.
+
+png(file="DecisionTreePlot.png",width=1500,height=1000) #Prep for image export
+plot(fit)
+dev.off() #turn off so the file can save. 
+#of course...I can't figure out how to re-enable plots.
+
+#Summarize the fit. this also displays confusion matrix
+summary(fit)
+#Otherwise, an improved confusion matrix, 
+#where predictions is for column headers and actual is for row headers
+predictions <- predict(fit, df)
+table(predictions, df$Survived)
+#True positives
+#The decision tree has classified 1470 No objects as No.
+#True negatives
+#The decision tree has classified 270 Yes objects as Yes.
+#False positives
+#The decision tree has classified 441 No objects as Yes.
+#False negatives
+#The decision tree has classified 20 Yes objects as No.
+#plot(predictions)
+
+
+#CLEAN UP##############################################
+rm(list = ls())  #Clear workspace
+dev.off() #Clear plots
+cat("\014")  #Clear console (ctrl+L)
+
+
+
