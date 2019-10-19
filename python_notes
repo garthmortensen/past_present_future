@@ -1,0 +1,117 @@
+a = 1
+b = 2
+c = a + b
+print(c)
+
+enumerate() # iterator that returns the value at each index of the list and the index
+
+d = [2,4,3,6,7,3,2]
+for i, element in enumerate(d):
+  print(i, element)
+
+for i in range(len(d)):
+  print(i, d[i])
+
+for element in d:
+  print(element)
+
+k = 3
+res = []
+for i, key in enumerate(d_dict.item()):
+  res.append(key)
+  if i == k-1:
+    break
+
+# lambda functions
+l = lambda x: x*3
+
+def l(x):
+    return x*3
+
+l2 = map(lambda x: x*3, [3,4,5])
+
+def sort_order(x):
+  return (x[1], x[0])
+
+test = [(12, 'afff'), (13, 'afff'), (12, 'add')]
+s = sorted(test, key=lambda x: (x[1], x[0]))
+
+
+l1 = [3, 4, 5]
+l2 = [5,3,6]
+l_combine = map(lambda x, y: x+y, [l1, l2]) # apply function to all element of the list
+
+def combine(l1, l2):
+  for i in range(len(l1)):
+    l1[i] += l2[i]
+  return l1
+
+l1 = [3, 4, 5]
+no_odd = filter(lambda x: x%2!=0, l1) # remove elements where fucntion  returns True
+
+
+def f(test):
+  # if type(test) is list:
+  #   for el in test:
+  #     print (el)
+  # else:
+  #   print(test)
+
+  try:
+    for el in test:
+      print(el)
+      print alkasjhdf
+  except ValueExcpetion as e:
+    print(e)
+  else:
+    something
+
+
+df = Dataframe()
+df = df.applymap(lambda x: x*3, axis=1)
+row_difference = df.apply(lambda row: row.min() - row.max(), axis=1)
+
+0 -3
+1 2
+2 -2342
+
+
+# DPT	NAME	ADDRESS	TTL #	PC	SAL-RATE
+# 0	868	B J SANDIFORD	DEPARTMENT OF CITYWIDE ADM	12702	X	$5.00
+# 1	868	C A WIGFALL	DEPARTMENT OF CITYWIDE ADM	12702	X	$5.00
+# 2	69	A E A-AWOSOGBA	HRA/DEPARTMENT OF SOCIAL S	52311	A	$51955.00
+
+def money_to_float(x):
+  return float(x.strip('$'))
+
+df['salary'] = df['SAL-RATE'].apply(money_to_float)
+
+# DPT	NAME	ADDRESS	TTL #	PC	SAL-RATE	salary
+# 0	868	B J SANDIFORD	DEPARTMENT OF CITYWIDE ADM	12702	X	$5.00	5.0
+# 1	868	C A WIGFALL	DEPARTMENT OF CITYWIDE ADM	12702	X	$5.00	5.0
+# 2	69	A E A-AWOSOGBA	HRA/DEPARTMENT OF SOCIAL S	52311	A	$51955.00	51955.
+
+null_map = df.isnull()
+number of nulls = null_map.sum()
+df.replace(np.nan, None)
+
+
+# index B
+# 1     1
+# 2     0
+# 3     4
+
+mask = df['B'] == 'monkey' and df['C'] > 4 and type(df['D']) == list ....
+dataframe2 = df[mask]
+
+[True, False, True]
+
+df.iloc #takes the numerical index of the row
+df.loc[] # takes the value of the index
+
+df.set_index('NAME')
+df.loc['C']
+df.iloc[2]
+
+# 1
+
