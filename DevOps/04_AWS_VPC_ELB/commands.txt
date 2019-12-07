@@ -1,0 +1,280 @@
+﻿# 2019.10.26
+
+# BUILD INFRASTRUCTURE
+
+## CREATE VPC
+Virtual Private Cloud
+### AWS, VPC, Your VPC. Default already exists. CREATE VPC
+Name tag = ecotech-vpc
+Give it IPv4 CIDR block = 10.25.0.0/16
+
+**OK**
+
+### CREATE SUBNETS
+1. ecotech-**public1** (10.25.1.0/24)
+2. ecotech-**public2** (10.25.2.0/24)
+3. ecotech-**private1** (10.25.3.0/24)
+4. ecotech-**private2** (10.25.4.0/24)
+
+#### first subnet
+Name tag = ecotech-public1
+VPC = vpc-014a6f20b5557eff6
+AZ = us-east-1a
+IPv4 CIDR block* = 10.25.1.0/24
+
+### AZs
+Availability Zones
+us-east-1a
+	ecotech-public1 (10.25.1.0/24)
+	ecotech-private1 (10.25.3.0/24)
+
+us-east-1b
+	ecotech-public2 (10.25.2.0/24)
+	ecotech-private2 (10.25.4.0/24)
+
+When you create VPC, it creates a routing table.
+Any subnets you create becomes default associated to that VPC's routing table.
+
+Public subnets should be routed through Internet Gateway (IG) 
+
+**OK**
+
+ecotech-private1 should be routed through NAT.
+
+**OK**
+
+## CREATE IG
+Internet Gateway
+Name tag = ecotech-IG
+Now I need to attach it to VPC via menu actions. (each VPC can only have 1 IG)
+
+**OK**
+
+## CREATE NAT Gateway
+Network Address Translation
+This allows EC2 in private subnet to communicate with internet through NAT.
+Bc NAT communicates with outer net, it must be in a public subnet.
+
+**OK**
+
+Subnet = ecotech-public1
+Elastic IP Allocation ID = generated on demand
+	* Q) Do I need to associate ecotech-public2 with the NAT?*
+	* A) Not according to the illustration*
+
+### EDIT NAT ROUTING TABLES
+Go to Subnets, select ecotech-public1, go to Route tables, click link, edit routes
+Destination = 0.0.0.0/0 to destignate all other traffic routes to IG
+Subnet is now public! Even if subnet EC2s are private, they still route through IG
+NAT is on ecotech-public1
+	* Q) Should I do this for ecotech-public2?*
+	* A1) I think so. How else could public2 talk to internet?*
+	* A2) When I go into ecotech-public2's route table, I see it already channels everything to IG.* **Good!**	
+	
+### CREATE ROUTE TABLE FOR PRIVATE NAT
+[This](https://youtu.be/hMOwqYO_rAc?t=1034) can serve as reference.
+Name tag = ecotech-private-routing-table
+This is not the main routing table
+Associate it with private subnet, so its explicitly associated with routing table.
+private subnet is no longer associated with default routing table.
+Next, add a route, to route traffic destined for internet through NAT
+Destination = 0.0.0.0/0
+Target = NAT gateway
+	* Q) Do I need to associate private2 with NAT?*
+	* A) Not according to illustration.*
+
+Now we have 2 routing tables.
+public subnet associated with main routing table
+private subnet associated with private routing table
+
+ecotech-public1 (10.25.1.0/24) NAT
+ecotech-public2 (10.25.2.0/24)
+ecotech-private1 (10.25.3.0/24) -> NAT
+ecotech-private2 (10.25.4.0/24)
+
+**OK!**
+
+**I can access the ec2 webservers, so I think everything up to this point is good!**
+
+## CREATE EC2s
+Elastic Compute 2
+t2.micro
+AMI: ami-3ea13f29 (public community image)
+
+### Config
+ecotech-vpc
+AZs = [us-east-1a, us-east-1a, us-east-1b]
+public IP ENABLE
+Name = [ecoweb1, ecoweb2, ecoweb3]
+SG name = ecoweb-sg
+Port 80 In
+Port 22 In on your [IP](http://checkip.amazonaws.com).
+
+ecoweb1 = ecotech-public1, AZ1
+ecoweb2 = ecotech-public2, AZ2
+ecoweb3 = ecotech-public2, AZ2
+
+
+**OK!**
+
+## CREATE ELB
+Elastic Load Balancer
+These direct web traffic round-robin to ec2s.
+Guide available [here](https://youtu.be/m7O24xz9LF8?t=542).
+Under instances, left pane, Load Balancer
+Application Load Balancer
+internet-facing
+Listener specifies which protocol and port the load balance for will listen for comms on.
+Availability Zones = [us-east-1a, us-east-1b]
+	*Q) Which subnets to place it on? the two public????*
+	*A) both i believe.
+SG = ecoweb-sg
+target group name = ecotech—webservers
+Health checks path = /index.php
+register targets = all 3 EC2s
+
+**Note** - DNS name = ecoweb-lb-621869536.us-east-1.elb.amazonaws.com (A Record)
+
+This endpoint address is used to access the ELB.
+The ELB has its own IPs, but they change bc this is a managed service. So, use DNS name.
+
+On left, under Target Groups, you can see tab Targets. Check it out. Wait a minute and error msg goes away.
+
+	*PROBLEM) When I browse to ecoweb-lb-621869536.us-east-1.elb.amazonaws.com
+	I get "Hi, I'm instance " and nothing else. It's not round robin.*
+	*SOLUTION) Do the recommended fix AND WAIT 10 MINUTES.*
+	https://stackoverflow.com/questions/20941704/ec2-instance-has-no-public-dns
+
+### TEST ELB
+Stop the instance, see if round-robin sends visit to the stopped instance. Nope! Restart EC2
+
+**OK**
+**I can access the ec2 webservers, so I think everything up to this point is good!**
+
+## CREATE RDS
+Amazon Relational Database Service
+
+### Create Subnet for DB
+Subnet group name = ecotech-db-subnet-group
+Description = Subnet for ecotech database
+VPC = echotech-vpc
+Add all the subnets related to this VPC
+REMOVE from the group
+ecotech-public1 = subnet-0815e516c12d6df55
+echotech-public2 = subnet-057b2a4945d538f21
+
+### Create RDS instance
+db = MySQL RDS
+template = free-tier. this has fewer parameters/options to set. same with dev/test tier
+name = ecotech-db1
+login = admin
+pass = nfreka4353$%
+Virtual Private Cloud (VPC) = echotech-vpc
+Public accessibility = Yes
+AZ = AZ1.
+
+#### Additional connectivity configuration
+##### Security Group
+name = ecodb-sg 
+allow traffic from the ecoweb-sg webservers to the RDS instance on port 3306 (MySQL)
+client app will use port 3306 to connect.
+> Change the ecodb-sg security group inbound rules to allow for Source (not IP) ecoweb-sg.
+
+#### Test RDS
+SSH into an EC2 and connect to RDS endpoint using,
+nc -vz ecotech-db1.cmi0099v8yr5.us-east-1.rds.amazonaws.com 3306
+
+*PROBLEM) When trying to SSH into EC2, "Please login as the user "ec2-user" rather than the user "root""
+*[(SOLUTION)](https://stackoverflow.com/questions/4230516/sshing-into-ec2-server-via-gives-error-please-login-as-the-ec2-user-user-rather)
+change from:
+ssh -i "Testin_NVirginia.pem" **root**@ec2-18-232-180-69.compute-1.amazonaws.com
+to:
+ssh -i "Testin_NVirginia.pem" **ec2-user**@ec2-18-232-180-69.compute-1.amazonaws.com
+
+*PROBLEM) Only ecoweb3 ec2 works...*
+*SOLUTION) Recreate EC2s, but with public subnets. Previously, I'd not set the subnets.*
+
+*PROBLEM) nc: connect to ecotech-db1.cmi0099v8yr5.us-east-1.rds.amazonaws.com port 3306 (tcp) failed: Connection timed out*
+nc -vz ecotech-db1.cmi0099v8yr5.us-east-1.rds.amazonaws.com 3306
+*SOLUTION?)* Check the inbound rules in security group for database, named ecodb-sh. I hadn't added SSH port 22!*
+*But No difference :(*
+*SOLUTION) VPC - ecodb-sg - Inbound Rules - Edit Rules - change MYSQL/Aurora source from the actual IP address to the security group name, e.g. _"sg-078159ca4885de927"_
+
+# EC2 SHELL
+
+## MOVE ON TO CREATE GIT REPO
+
+### install updates
+sudo yum update -y
+
+### install git
+sudo yum install git -y
+
+### make directory
+mkdir assignment-vpc-gmort01
+
+### enter directory
+cd assignment-vpc-gmort01
+
+### create git repo
+git init
+
+### set local Git identity (bc private network)
+git config --global user.email "mortensengarth@hotmail.com"
+git config --global user.name "gmort01"
+
+### Make README.md
+touch README.md
+
+### Add content
+nano README.md
+*Assignment VPC Files*
+
+### Add to repo
+git add README.md
+
+### Commit to repo
+git commit -m "adding to repo"
+
+### Create branch
+git checkout -b develop
+
+### Checkout branch
+see above~~
+
+## Create Shell Script
+
+### Create metadata.sh
+touch metadata.sh
+nano metadata.sh
+
+### edit permissions
+chmod u+x metadata.sh
+
+### Run script
+./metadata.sh -v
+./metadata.sh -c
+
+## Git
+
+### Check branch
+git branch
+
+### Merge Develop back into Master
+git checkout master
+git merge develop
+
+### Add local repo to github repo
+git remote add origin https://github.com/UST-SEIS665/hw04-gmort01.git
+
+### Git commit
+git commit -m "adding all files"
+
+### Git push 
+git push -u origin master
+
+### Check github to see files are uploaded
+
+# troubleshooting
+Had to do [this](https://stackoverflow.com/questions/8044675/pull-is-not-possible-because-you-have-unmerged-files-git-stash-doesnt-work-do)
+

@@ -1,0 +1,107 @@
+# Autoscaling
+2019.11.03
+
+## Create Infrastructure
+
+### Create VPC
+Name tag = VPC_for_Garth_Inc
+IPv4 CIDR block = 10.0.0.0/16
+
+### Create Internet Gateway (IG)
+Name tag = IG_for_Garth_Inc
+Attach to VPC_for_Garth_Inc
+
+### Create Subnets
+_When you create VPC, it creates a routing table. Any subnets you create becomes default associated to that VPC's routing table._
+
+_All instances on the two production subnets will need to be able to communicate with the Internet. You will need to configure the subnets and routing tables in the VPC to allow this communication._
+
+1. First Subnet
+Name tag = production-public-1
+IPv4 CIDR block = 10.0.1.0/25
+
+2. Second Subnet
+Name tag = production-public-2
+IPv4 CIDR block = 10.0.1.128/25
+
+### Create Route Table
+Name tag = RouteTable_for_Garth_Inc_1
+
+#### Routes
+Destination = 0.0.0.0/0
+Target = IG_for_Garth_Inc
+
+IS THIS CORRECT???
+
+### Create Security Group (SG)
+
+1. Elastic Load Balancer
+Security group name = production-lb
+Description = Accept traffic from the Internet and distribute it to web servers.
+VPC = the VPC
+
+1. Web
+Security group name = production-web
+Description = Allow all external devices to communicate with the web server instances via SSH and HTTP
+VPC = the VPC
+Ingress
+SSH allowed from your workstation
+HTTP allowed from the Internet
+
+### Create Application Load Balancer (ELB/LB)
+_The autoscaling group will deploy multiple web servers into your VPC. You will need an application load balancer to distribute requests to the web servers to ensure that the service is highly available._
+
+Name = web-lb
+Protocol = HTTP
+Use /index.php as the health check ping path.
+
+ALL GOOD HERE? MANY SETTINGS
+
+#### ELB Target Group
+Name = productionWebservers
+
+## Create Servers
+
+### Create AMI
+
+Amazon Linux AMI 64-bit
+t2.micro
+Network = VPC_for_Garth_Inc
+Subnet = production-public-1
+Auto-assign public IP = Enable
+IAM role = S3-full-access
+
+User data (in Advanced section) (copy paste it in)
+#!/bin/bash
+yum update -y
+yum install -y git httpd php
+service httpd start
+chkconfig httpd on
+aws s3 cp s3://seis665-public/index.php /var/www/html/
+
+Tag Name = webserver1
+Security group = production-web
+
+PROBLEM) When browsing to public IP, I see "Hi, I'm instance" without the instance name.
+SOLUTION) As before, do [this](https://stackoverflow.com/questions/20941704/ec2-instance-has-no-public-dns).
+
+#### Create Image
+Image name = basicweb
+Image description = This is a basic webserver instance
+
+Once it's created, terminate the original EC2.
+
+### Create Autoscaling Group
+
+
+
+
+
+
+
+
+
+
+
+
+

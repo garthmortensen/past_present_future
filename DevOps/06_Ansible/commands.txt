@@ -1,0 +1,29 @@
+not just yum install mysql
+
+use mysql-server
+
+mysqld = mysql daemon process name
+
+
+6:40 class discussion---
+server {
+listen 80;
+server_name example.com; REPLACE example.com WITH A SPECIFIC VARIABLE
+location / {
+root /var/www/example.com/public_html/;
+index index.html index.htm;
+}
+}
+
+server {
+listen 80;
+server_name {{ansible_fqdn}};
+location / {
+root /var/www/{{ansible_fqdn}}/public_html/;
+index index.html index.htm;
+}
+}
+
+ansible web1 -setup | grep hqdn
+ansible_fqdn returns the variable you want
+

@@ -1,0 +1,188 @@
+# install updates
+sudo yum update -y
+
+# install git
+sudo yum install git -y
+
+# install webserver
+sudo amazon-linux-extras install nginx1.12 -y
+
+# check if nginx is running in processes
+ps ax | grep nginx | grep -v grep
+# didnt do anything...
+
+# start nginx service
+sudo service nginx start
+
+# visit your ec2 public ip
+http://34.224.25.123/
+# see your landing page? great.
+
+# configure webserver to auto start webserver if ec2 reboots
+sudo chkconfig nginx on
+
+# navigate to where Web Document Root is located
+cd usr/share/nginx/html/
+ls -la
+# see index.html? good.
+
+# copy s3 bucket's index.html to ec2 folder above
+sudo aws s3 cp s3://mort0052-assignment-3/index.html /usr/share/nginx/html/index.html
+
+# try to pull info from meta-data server
+curl http://169.254.169.254/latest/meta-data/
+
+# check what instance type it is
+curl http://169.254.169.254/latest/meta-data/instance-type
+
+# create directory, enter it
+mkdir scripts
+cd scripts/
+
+# create git repo
+git init
+
+# create script
+touch provision.sh
+
+# edit provision.sh
+nano provision.sh
+
+# Edit it
+
+#!/bin/bash
+
+# Garth Mortensen
+# 2019.10.11
+
+# assign variables
+ACTION=${1}
+VERSION="1.0.0"
+
+
+function show_help() {
+
+cat << EOF
+Usage: ${0} {-v|--version|-r|--remove|-h|--help} <filename>
+
+OPTIONS:
+        -z              Update all system packages, install Nginx and config for auto start, copy index.html, start Nginx service.
+        -v | --version  Display version
+        -r | --remove   Stop nginx, delete root directory files, uninstall nginx
+        -h | --help     Display the command help
+
+Examples:
+        Show version:
+                $ ${0} -v
+        Remove nginx:
+                $ ${0} -r
+        Display help:
+                $ ${0} -h
+
+EOF
+
+}
+
+
+function startup() {
+
+# update all system packages
+sudo yum update -y
+# install nginx
+sudo amazon-linux-extras install nginx1.12 -y
+# config nginx to autostart on reboot
+sudo chkconfig nginx on
+# copy index.html from s3 to directory
+sudo aws s3 cp s3://mort0052-assignment-3/index.html /usr/share/nginx/html/index.html
+# start nginx
+sudo service nginx start
+
+}
+
+
+function remove_nginx() {
+
+# stop nginx
+sudo service nginx stop
+# delete root directory files
+sudo rm -fr /usr/share/nginx/html
+# uninstall nginx
+sudo yum remove nginx -y
+}
+
+
+function show_version() {
+
+# return variable string
+echo "${VERSION}"
+
+case "$ACTION" in
+        "")
+                startup
+                ;;
+        -h|--help)
+                show_help
+                ;;
+        -v|--version)
+                show_version
+                ;;
+        -r|--remove)
+                remove_nginx
+                ;;
+        *)
+        echo "Usage ${0} {-h}"
+        exit 1
+esac
+
+
+
+
+
+# create script
+touch instancedata.sh
+
+# edit instancedata.sh
+nano instancedata.sh
+
+# Edit it
+
+#!/bin/bash
+
+# Garth Mortensen
+# 2019.10.11
+
+# This script pulls metadata from aws.
+
+# append hostname to txt,
+# -w | --write-out = format. \n newline
+curl -w "\n" http://169.254.169.254/latest/meta-data/hostname >> metadata.txt
+# append identity and access management to txt
+curl -w "\n" http://169.254.169.254/latest/meta-data/iam/info >> metadata.txt
+# append security-groups to txt
+curl -w "\n" http://169.254.169.254/latest/meta-data/security-groups >> metadata.txt
+
+
+CREATE GITHUB REPO
+on github.com
+
+GIT ADD ALL FILES
+git add -A
+
+GIT COMMIT
+git commit -m "adding all 3 files"
+
+ADD LOCAL REPO TO UPSTREAM REPO
+git remote add origin https://github.com/UST-SEIS665/hw03-gmort01.git
+
+GIT PUSH
+git push -u origin master
+enter login/pass
+
+
+
+
+
+
+
+
+

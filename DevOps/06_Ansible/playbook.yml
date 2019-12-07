@@ -1,0 +1,40 @@
+---
+# this can be run using Ansible on a linux/unix ec2
+- name: all server setup
+  hosts: all
+  become: yes
+  vars: 
+    administrator_name: corpadmin
+  tasks:
+    - name: Update all current software packages
+      yum: name='*' state=latest
+    - name: Create user administrator_name variable on each system with a custom password
+      user: 
+        name: "{{administrator_name}}"
+        password: 'ilovecats'
+- name: install nginx
+  hosts: web1
+  become: yes
+  tasks:
+    - name: install nginx
+      yum: name=nginx state=present
+    - name: ensure nginx is up and running
+      service: name=nginx enabled=yes
+    - name: create directory
+      file: path=/etc/ngingx/conf.d/default.conf state=directory
+    - name: copy j2 template
+      template: src=default.conf.js dest=/etc/ngingx/conf.d/default.conf
+- name: db1 server setup
+  hosts: database1
+  become: yes
+  tasks: 
+    - name: install mysql-server
+      yum: name=mysql-server state=present
+    - name: ensure mysql is up and running
+      service: name=mysqld enabled=yes  
+    - name: use a loop to create 5 directories
+      file:
+        dest: "/var/data/client{{ item }}"
+        state: directory
+      with_sequence: start=1 end=5 stride=1
+      
