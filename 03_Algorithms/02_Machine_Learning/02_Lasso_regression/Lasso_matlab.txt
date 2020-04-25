@@ -1,0 +1,90 @@
+%SEIS763 Machine Learning
+%Garth Mortensen, mort0052@stthomas.edu
+%Assignment 3
+
+%Clear previous variables, wipe screen, close windows
+clear all
+clc
+% close all
+
+% 3. Use variables  Age, Gender, Height, Weight, Smoker, Location,
+% SelfAssessedHealthStatus to build a linear regression model to predict the
+% systolic blood pressure.
+
+% https://www.mathworks.com/help/matlab/matlab_prog/create-a-table.html
+load patients;
+
+%Target-----------------------------------------------------------
+Y = Systolic;
+
+%Standardize numericals-------------------------------------------
+XNumeric = [Age Height Weight];
+XNumeric_scaled = zscore(XNumeric);
+
+%One-hot encode categoricals--------------------------------------
+%Because these attributes are single-columns containing many values, we
+%need to break them into binary attributes, one for each value.
+Gender = nominal(Gender);
+GenderCateg = dummyvar(Gender);
+
+Location = nominal(Location);
+LocationCateg = dummyvar(Location);
+
+SelfAssessedHealthStatus = nominal(SelfAssessedHealthStatus);
+SelfAssessedHealthStatusCateg = dummyvar(SelfAssessedHealthStatus);
+
+% Bring Categorical together
+%Now that we've broken each attribute value into a seperate binary vector,
+%we need to bring them all back together into a single matrix.
+XCateg = [GenderCateg LocationCateg SelfAssessedHealthStatusCateg Smoker];
+
+% Merge numerical with categorical matrices----------------------
+XAll = [XNumeric_scaled XCateg];
+
+
+% 4. Use **lasso regression** with **10-fold cross-validation** to identify useful
+% predictors. Plot a lasso plot with readable tick labels on the X and Y coordinates
+% in your plot for easy visualization and verification. Missing clear and readable
+% tick labels in your plot will cost you significant points for this assignment.
+
+%Lasso===========================================================
+%We need to determine the number of k-folds and alpha value.
+%With those values set, we can run our lasso linear regression.
+%[B, FitInfo] = lasso(X, Y,Name, Value)
+% Set cross validation k-fold, k
+kfold = 10;
+% 'Alpha', alpha value, where alpha = 1 is lasso, and = 0.00001 approaches
+% ridge
+alpha = 1;
+% Don't set lambda. It's a vector, not a scalar.
+% Default lambda count (steps) = 100
+[B FitInfo] = lasso(XAll, Y, 'CV', kfold, 'Alpha', alpha);
+
+
+% Lasso Plot of Coefficients=====================================
+lassoPlot(B, FitInfo, 'PredictorNames', {'Age', 'Height', 'Weight',...
+    'Female', 'Male',...
+    'County General Hospital', 'St Marys Medical Center', 'VA Hospital',...
+    'Excellent', 'Fair', 'Good', 'Poor',...
+    'Smoker'},...
+    'PlotType', 'lambda',...
+    'XScale', 'log'),...
+    ylabel('theta'),...
+    xlabel('lambda')
+
+
+% Cross-validated Deviance of Lasso Plot==========================
+%Product an extra graph to display cross-validation
+lassoPlot(B, FitInfo, 'PlotType', 'CV');
+
+% Theta vs Predictors=============================================
+%Product an extra graph to display theta vs predictors
+figure, pcolor(B), xlabel('Theta'), ylabel('Predictors')
+
+% Interpretation-------------------------------------------------
+% Identify number of nonzero coefficients are minimum deviance plus one 
+% standard deviation.
+indx = FitInfo.Index1SE;
+B0 = B(:,indx);
+nonzeros = sum(B0 ~= 0)
+

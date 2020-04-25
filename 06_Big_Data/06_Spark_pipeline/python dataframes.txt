@@ -1,0 +1,69 @@
+# read file containing annual crime reports
+filename = "Police_Incidents_2019.csv"
+df = pd.read_csv(filepath + filename,
+                 header=0,
+                 delimiter=',')
+
+# read file and sheet containing all crime classifications
+filename = "00_lookup_crime_weights.xlsx"
+df_crimes = pd.read_excel(filepath + filename,
+                          sheet_name='crimes_mpls',
+                          header=0)
+
+# read file and sheet containing crime risk_street/multiplier determinations
+df_determ = pd.read_excel(filepath + filename,
+                          sheet_name='determinations',
+                          header=0)
+
+# apply crime multiplier risk_streetings
+# Excel index-match. read from df, and perform lookup in df_crimes to pull risk_streets back into df
+# https://towardsdatascience.com/name-your-favorite-excel-function-and-ill-teach-you-its-pandas-equivalent-7ee4400ada9f
+df['risk_street'] = df.description.map(df_crimes.set_index('description')['multiplier'].to_dict())
+
+# Mask which crimes occur during business hours
+# Excel =if(Condition, Then, Else)
+# =IF(AND(G4>559,G4<1801),"business_hours","")
+df['business_hours'] = (df['reportedTime'] > time_start_mpls) & (df['reportedTime'] < time_end_mpls)
+
+# drop rows where business_hours is not True
+df = df.loc[(df.business_hours == True)]
+
+# drop rows where publicaddress is nan
+# https://stackoverflow.com/a/47629362
+df = df[df['publicaddress'].notnull()]
+
+# strip leading 0s from publicaddress
+# https://stackoverflow.com/a/39017803
+df['publicaddress'] = df['publicaddress'].str.lstrip('0')
+
+# replace trailing X with sql wildcard _ in publicaddress. for sql JOIN LIKE
+# replace 1 or more 'X', following integer
+# https://regexone.com/lesson/capturing_groups
+
+# [0-9]+(X+)
+# ^ start of string. skip it
+# [0-9]+ One or more digits
+# (X)+ One or more X
+
+# df['publicaddress'].replace(to_replace="([0-9])+(X+)", value=r"\2", regex=True, inplace=False)
+# I give up.
+
+# string replace
+df['publicaddress'] = df['publicaddress'].str.replace('X', '_')
+
+# assign city name
+df['city'] = 'MINNEAPOLIS'
+
+# reorder columns
+df = df[['city', 'neighborhood', 'publicaddress', 'risk_street']]
+
+# rename columns
+df.columns = ['city', 'neighborhood', 'street', 'risk_street']
+
+# uppercase
+df['neighborhood'] = df['neighborhood'].str.upper()
+df['street'] = df['street'].str.upper()
+
+df_mpls = df
+
+del time_start_mpls, time_end_mpls

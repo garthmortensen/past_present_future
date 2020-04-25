@@ -1,1 +1,0 @@
-This is mainly coursework for Data Mining.

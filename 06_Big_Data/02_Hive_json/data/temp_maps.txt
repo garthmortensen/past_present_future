@@ -1,0 +1,6 @@
+2/21/2020	MN	high:37,low:17
+2/22/2020	MN	high:39,low:23
+2/23/2020	MN	high:39,low:19
+2/24/2020	MN	high:37,low:26
+2/25/2020	MN	high:33,low:19
+2/26/2020	MN	high:26,low:8

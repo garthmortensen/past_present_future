@@ -1,0 +1,50 @@
+#CSIS734-01 Data Mining & Predictive Analytics
+#Garth Mortensen, mort0052@stthomas.edu
+#Assignment 8, large dataset
+
+# Perform k-means clustering of the NYSE dataset that has more than 9,211,031 NYSE trade data. The
+# dataset will be placed on the Blackboard. Columns from 1 to 7 are:
+
+# 1 ID          INTEGER   record ID
+# 2 OPEN_P      DOUBLE    open price
+# 3 HIGH_P      DOUBLE    highest price
+# 4 LOW_P       DOUBLE    lowest price
+# 5 CLOSE_P     DOUBLE    close price
+# 6 VOLUME      DOUBLE    volume
+# 7 CLOSE_ADJ_P DOUBLE    close adjusted price
+
+# Use columns 2 to 7 from the input data and perform the k-means clustering with k = 4. If your tool
+# allows you to control the maximum number of iterations, set the maximum number of iterations to
+# 10,000.
+
+# Question 1: Carefully check the data before you perform the clustering task 1. Output the final four
+# centers that were generated from this clustering process. You should output those four centers in the
+# format shown in the following table.
+
+#start the timer
+start_time <- Sys.time()
+
+#load data
+df <- read.csv("G:/Google Drive/aStThomas/5DataMiningAndPredictiveAnalytics/Assignments/8/NYSE_DM.csv", header = TRUE, stringsAsFactors = TRUE)
+
+#give col names
+colnames(df) <- c("ID","OPEN_P", "HIGH_P", "LOW_P", "CLOSE_P", "VOLUME", "CLOSE_ADJ_P")
+
+#drop ID column
+df <- df[, -c(1)]
+
+#standardize the continuous numbers
+df <- scale(df)
+
+#perform kmeans with k = 4
+fit <- kmeans(df, centers = 4, iter.max = 10000)
+
+#display the results, taken from the fit table centers
+fit$centers
+View(fit$centers)
+
+#stop watch
+end_time <- Sys.time()
+total_time <- end_time - start_time
+total_time
+

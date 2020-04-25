@@ -1,1 +1,0 @@
-This is an exploration on text analysis. Having done this work in Matlab, I'm trying to transfer knowledge into Python.

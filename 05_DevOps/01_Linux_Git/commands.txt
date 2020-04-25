@@ -1,0 +1,355 @@
+CHANGE DIRECTORY
+cd 
+
+CONNECT
+ssh -i "Testing_NVirginia.pem" ec2-user@ec2-3-88-151-46.compute-1.ama
+
+UPDATE LINUX
+sudo yum update -y
+
+INSTALL GIT
+sudo yum install git -y
+
+CREATE DIRECTORY
+mkdir project1
+
+CHANGE DIRECTORY
+cd project1
+
+CREATE REPO
+git init
+-Creates a hidden sub-directory in your current directory called “.git” that contains the directory files and all changes to those files
+
+CONFIRM REPO EXISTS
+ls -la
+
+-----------------------
+CREATE SCRIPT
+touch script1
+
+EDIT SCRIPT
+nano script1
+
+#!/bin/bash
+# assign first command line argument
+ARG1=${1}
+# display first provided argument
+echo $ARG1
+
+CHANGE PERMISSION
+chmod u+x script1
+
+RUN SCRIPT
+./script1 foo
+
+GIT ADD
+git add script1
+
+GIT COMMIT
+git commit -m "adding first file"
+
+GIT STATUS
+git status
+
+-----------------------
+CREATE SCRIPT
+touch script1
+
+EDIT SCRIPT
+nano script1
+
+#!/bin/bash
+
+# assign the action
+ACTION=${1:-launch}
+
+# display first provided argument
+# if [ -z “$X” ] MEANS [ if $X is empty ]
+# if [ -n “$X” ] MEANS [ if $X is not empty ]
+if [ -z "$1" ]
+	then
+		echo "No argument supplied, default action is: $ACTION"
+	else
+		echo "Initiating $ACTION."
+fi
+
+
+CHANGE PERMISSION
+chmod u+x script2
+
+RUN SCRIPT
+./script2 feafheafieafa
+
+GIT ADD
+git add script2
+
+GIT COMMIT
+git commit -m "adding second file"
+
+GIT STATUS
+git status
+
+GIT LOG
+git log
+- verify that your local repo contains 2 commits
+
+-----------------------
+CREATE SCRIPT
+touch script3
+
+EDIT SCRIPT
+nano script3
+
+
+#!/bin/bash
+
+# assign variables
+# EOF = End-of-file
+# cat << EOF = trick to output many lines to terminal
+ACTION=${1}
+
+function display_help() {
+
+cat << EOF
+Usage: ${0} {-h|--help}
+
+OPTIONS:
+        -h | --help     Display the command help
+
+Examples:
+        Display help:
+                $ ${0} -h
+
+EOF
+}
+
+case "$ACTION" in
+        -h|--help)
+                display_help
+                ;;
+        *)
+        echo "Usage ${0} {-h}"
+        exit 1
+esac
+
+
+CHANGE PERMISSION
+chmod u+x script3
+
+RUN SCRIPT
+./script3
+./script3 -h
+./script3 --help
+
+GIT ADD
+git add script3
+
+GIT COMMIT
+git commit -m "adding third file"
+
+GIT STATUS
+git status
+
+GIT LOG
+git log
+- verify that your local repo contains 3 commits
+
+GIT CREATE NEW BRANCH
+git checkout -b feature/script3
+- Typically, you don’t want to edit and make changes to the files on the master branch. You should do all of your coding and testing in a separate branch, usually a feature branch.
+
+CHECK CURRENT BRANCH
+git branch
+
+-----------------------
+EDIT SCRIPT
+nano script3
+
+#!/bin/bash
+
+# assign variables
+# EOF = End-of-file
+ACTION=${1}
+
+
+function create_file() {
+
+touch "${1}-12345"
+
+}
+
+
+function display_help() {
+
+cat << EOF
+Usage: ${0} {-c|--create|-h|--help} <filename>
+
+OPTIONS:
+        -c | --create   Create a new file
+        -h | --help     Display the command help
+
+Examples:
+        Create a new file:
+                $ ${0} -c foo.txt
+        Display help:
+                $ ${0} -h
+
+EOF
+}
+
+
+case "$ACTION" in
+        -h|--help)
+                display_help
+                ;;
+        -c|--create)
+                create_file "${2:-server}"
+                ;;
+        *)
+        echo "Usage ${0} {-h}"
+        exit 1
+esac
+
+
+RUN SCRIPT
+./script3
+./script3 --c
+./script3 -c foo
+./script3 --create bar
+
+CHECK NEW FILES
+ls -la
+drwxrwxr-x 3 ec2-user ec2-user 117 Oct  6 17:23 .
+drwx------ 4 ec2-user ec2-user  90 Oct  6 15:50 ..
+-rw-rw-r-- 1 ec2-user ec2-user   0 Oct  6 17:22 bar-12345
+-rw-rw-r-- 1 ec2-user ec2-user   0 Oct  6 17:22 foo-12345
+drwxrwxr-x 8 ec2-user ec2-user 166 Oct  6 17:14 .git
+-rwxrw-r-- 1 ec2-user ec2-user 106 Oct  6 16:02 script1
+-rwxrw-r-- 1 ec2-user ec2-user 209 Oct  6 16:09 script2
+-rwxrw-r-- 1 ec2-user ec2-user 508 Oct  6 17:21 script3
+-rw-rw-r-- 1 ec2-user ec2-user   0 Oct  6 17:23 server-12345
+
+
+
+
+
+
+-----------------------
+EDIT SCRIPT
+nano script3
+
+#!/bin/bash
+
+# assign variables
+# EOF = End-of-file
+ACTION=${1}
+VERSION="1.0.1"
+
+
+function delete_file() {
+
+rm "${1}-12345"
+
+}
+
+
+function create_file() {
+
+touch "${1}-12345"
+
+}
+
+
+function show_version() {
+
+echo "${VERSION}"
+
+}
+
+
+function display_help() {
+
+cat << EOF
+Usage: ${0} {-c|--create|-h|--help} <filename>
+
+OPTIONS:
+        -d | --delete   Delete a file
+        -c | --create   Create a new file
+        -v | --version  Display version
+        -h | --help     Display the command help
+
+Examples:
+        Delete a file:
+                $ ${0} -d foo.txt
+        Create a new file:
+                $ ${0} -c foo.txt
+        Show version:
+                $ ${0} -v
+        Display help:
+                $ ${0} -h
+
+EOF
+}
+
+
+case "$ACTION" in
+        -h|--help)
+                display_help
+                ;;
+        -c|--create)
+                create_file "${2:-server}"
+                ;;
+        -d|--delete)
+                delete_file "${2:-server}"
+                ;;
+        -v|--version)
+                show_version
+                ;;
+        *)
+        echo "Usage ${0} {-h}"
+        exit 1
+esac
+
+
+GIT ADD
+git add script3
+
+GIT COMMIT
+git commit -m "updated script3 to include delete and version"
+
+GIT RETURN TO MASTER
+git checkout master
+
+EXAMINE SCRIPT
+less script3
+- latest changes not visible, because on master
+
+GIT CHANGE TO BRANCH
+git checkout feature/script3
+
+EXAMINE SCRIPT
+less script3
+- latest changes visible, because on branch
+
+GIT MERGE
+git checkout master
+git merge feature/script3
+
+EXAMINE SCRIPT
+less script3
+- latest changes visible, now on master
+
+
+CREATE GITHUB REPO
+on github.com
+
+ADD LOCAL REPO TO UPSTREAM REPO
+git remote add origin https://github.com/gmort01/DevOpsPractice2.git
+
+GIT PUSH
+git push -u origin master
+enter login/pass
+
+
+
+

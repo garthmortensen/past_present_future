@@ -1,0 +1,65 @@
+#!/bin/bash
+
+
+# assign variables
+ACTION=${1}
+VERSION="0.1.0"
+
+
+function show_help() {
+
+cat << EOF
+Usage: ${0} {-v|--version|-r|--remove|-h|--help} <filename>
+
+OPTIONS:
+        -z              Update all system packages, install Nginx and config for auto start, copy index.html, start Nginx service.
+        -v | --version  Display version
+        -r | --remove   Stop nginx, delete root directory files, uninstall nginx
+        -h | --help     Display the command help
+
+Examples:
+        Show version:
+                $ ${0} -v
+        Remove nginx:
+                $ ${0} -r
+        Display help:
+                $ ${0} -h
+
+EOF
+
+}
+
+
+function show_version() {
+
+# return variable string
+echo "${VERSION}"
+
+}
+
+
+function create_files() {
+
+# endpoint is timing out. I think it's a misconfiguration in the routing tables...?
+nc -vz ecotech-db1.cmi0099v8yr5.us-east-1.rds.amazonaws.com 3306 >> rds-message.txt
+
+# create ecoweb1-identity.json
+curl -w "\n" http://169.254.169.254/latest/dynamic/instance-identity/document/ >> ecoweb1-identity.json
+
+}
+
+
+case "$ACTION" in
+        "")
+                show_help
+                ;;
+        -v|--version)
+                show_version
+                ;;
+		-c|--create)
+				create_files
+				;;
+        *)
+        echo "Please input show_help to see available commands"
+        exit 1
+esac
