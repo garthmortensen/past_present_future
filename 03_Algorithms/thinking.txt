@@ -1,0 +1,7 @@
+Decision trees provide high-level efficiency and easy interpretation.
+
+DTs:
+* adept at handling large & high dimensionality datasets
+* can handle missing datasets
+* trade off between accuracy and simplicity with DTs vs Random Forests
+
