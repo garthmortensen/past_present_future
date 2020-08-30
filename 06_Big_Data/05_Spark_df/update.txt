@@ -1,6 +1,0 @@
-select contrib.cmte_id, contrib.TRANSACTION_AMT, other.CMTE_NM,cmte.cmte_nm, cmte.CAND_ID ,cand.cand_name
-FROM contrib 
-  JOIN cmte other ON (other.cmte_id = contrib.other_id)
-  JOIN cand ON (other.cand_id = cand.cand_id)
-  JOIN cmte ON (contrib.other_id = cmte.cmte_id)
-where cand.cand_name = 'LEWIS, JASON MARK MR.'

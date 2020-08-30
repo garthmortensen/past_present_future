@@ -1,1 +1,0 @@
-This is just a review of several technologies.
