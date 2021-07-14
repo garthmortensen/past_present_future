@@ -1,0 +1,285 @@
+python snippets
+
+log into the SAS server in Putty, then type:
+                /usr/bin/python3.6
+                then write your hello world program
+
+
+# replace df to db table
+                import pandas as pd
+                import cx_Oracle
+                import sqlalchemy as sa
+                oracle_db = sa.create_engine('oracle://user:pass@dbconnectionstring)
+                connection = oracle_db.connect()
+
+                df = pd.read_csv(r'\\pdave-clindat01\hey\hihi.csv', keep_default_na=False)
+
+                df.to_sql('xxx'
+                                                  , connection
+                                                  , schema=’xxx’
+                                                  , if_exists='replace'
+                                                  , index=False)
+
+
+
+# send email - I THINK THIS MESSED UP MY ENVIRONMENT. AFTER THIS, MY ERROR: <win32com.gen_py.Microsoft Outlook 16.0 Object Library._NameSpace instance at 0x1887276931080>' object has no attribute 'createRecipient'
+                import win32com.client
+
+                inbox = win32com.client.gencache.EnsureDispatch("Outlook.Application").GetNamespace("MAPI")
+                                #print(dir(inbox))
+                inbox = win32com.client.Dispatch("Outlook.Application")
+                                #print(dir(inbox))
+
+                mail = inbox.CreateItem(0x0)
+                mail.To = "garth.mortensen@medica.com"
+                mail.Subject = "This is the Subject"
+                mail.Body = "This is the body"
+                mail.Send()
+
+# inserting "garth rulz" into 2nd column
+                df.insert(2, "header_name", "garth rulz") 
+
+
+
+# search df for string and return location, then extract values to right of that location
+                search = "Market"
+                hit = np.where(df.values == search)
+                row_index, col_index = hit[0][0], hit[1][0]  # extract values
+                header_market = df.iloc[row_index, col_index + 1]
+                header_market_Member_Months = df.iloc[row_index, col_index + 2]
+                header_market_share = df.iloc[row_index, col_index + 3]
+
+
+# search df for string  https://stackoverflow.com/questions/11350770/select-by-partial-string-from-a-pandas-dataframe
+                df[df["col_A"].str.contains("Totals", case=False, na=False)]
+
+
+copy file from one directory to the next
+                for file in os.listdir(dir1):
+                                if file.lower().endswith('enrollment.xlsx'):
+                                                copyfile(dir1 + file, dir2 + file)
+
+
+import subprocess
+
+pscp_cmd = [
+            "pscp",
+            "psas1-ssh:/sasdata/riskadj/analytics/dev/misc/output/t0/test_file1.txt",
+            "J:/FIN/Risk Adjustment/Temp/btn_test",
+            ]
+
+subprocess.run(
+    pscp_cmd,
+    stderr=subprocess.STDOUT,
+    stdout=subprocess.PIPE,
+    ) 
+
+
+rename specific columns
+all_df.rename(columns={'Relative_Risk1': 'Relative_Risk',
+                                                                                   'PLRS_i_incl._EDF': 'PLRS',
+                                                                                   'EDFi': 'EDF',
+                                                                                   'ARFi': 'ARF',
+                                                                                   'GCFi': 'GCF',
+                                                                                   'IDFi': 'IDF',
+                                                                                   'AVi': 'AV',
+                                                                                   'Factors_incl._risk_score': 'Factors_incl_risk_score',
+                                                                                   'Factors_excl._risk_score': 'Factors_excl_risk_score'},
+                                                  inplace=True)
+
+
+sort df
+                df_all = df_all.sort_values(by=['wnrar_run', 'h_state', 'h_market',
+                                'h_issuer_code', 'ver'])
+
+read db creds
+                # =============================================================================
+                # READ DB CREDENTIALS
+                # =============================================================================
+
+                filepath = "//Corp/xxx/creds/"
+                filename = "filename.txt"
+
+                # read lines and extract as variables
+                lines = open(filepath + filename, "r").readlines()
+                login, passw, connt = lines[0].strip(), lines[1].strip(), lines[2].strip()
+
+                # oracle and sqlchemy connection string
+                connection_string_or = login + '/' + passw + '@' + connt
+                connection_string_sa = 'oracle://' + login + ':' + passw + '@' + connt
+
+
+loop through xlsx folder and append to big df
+                # loop through all 20...xlsx files and append to mega df
+                df_all = pd.DataFrame()
+                for file in os.listdir(filepath):
+                                if file.startswith('20') and file.endswith('.xlsx'):
+                                                df = pd.read_excel(filepath + file,
+                                                                                                                   header=0)
+
+                                                df_all = df_all.append(df)
+                                                print("Appended: " + file.split("_")[0])
+
+
+replace NANs in a column with 0. Oracle doesnt allow nan, so doing this replacement
+                df_all['hhs_transfer'].replace(to_replace=np.nan, value=0, inplace=True)
+
+replace nan in all integer columns with 0 and str with ""
+                df_all[columns_int] = df_all[columns_int].replace(np.nan, 0)
+                df_all[columns_str] = df_all[columns_str].replace(np.nan, "")
+
+convert all named colunmms to specific data type
+                df_all[columns_str] = df_all[columns_str].astype(str)
+                df_all[columns_int] = df_all[columns_int].astype(int)
+
+pretty print a list
+                from pprint import pprint
+                pprint(listy)
+
+
+
+obtain python filesize
+                https://stackoverflow.com/questions/2104080/how-can-i-check-file-size-in-python
+
+
+write to csv. not the best way to do it.
+                filepath = "L:\\files\\02_missions\\this_mission\\"
+                filename = "testing.csv"
+
+                variable_1 = "a"
+                divide = ","
+                newline = "\n"
+
+                f = open(filepath + filename,'w')
+
+                f.write("field 1" + str(divide) + "field 2" + newline)  # headers
+                for x in [1, 2, 3, 4, 5]:
+                                cell1 = x
+                                cell3 = variable_1
+                                f.write(str(cell1) + str(divide) + str(cell3) + str(newline))
+
+                f.close()
+
+dataframe lookup https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.at.html
+                df.at[4, 'B']
+                > 2
+or index at
+                df1.iat[0,0] = "yo"
+                
+                
+timer
+                import time  # for stopwatch and sleep
+    t1 = time.perf_counter()  # track execution time
+                t2 = time.perf_counter()  # end of db operations
+                execution_time = t2 - t1  # script runs ~30 secs
+                print("execution_time: " + str(execution_time))
+
+
+make sound / ping / beep when something is done
+                import winsound
+                frequency = 1000  # hertz
+                duration = 1000  # milliseconds
+                winsound.Beep(frequency, duration)
+
+
+
+# if provider has at least 50 charts, use provider name, else use bin name
+chart_loc_2019["Chart_Loc_new"] = np.where(
+                                chart_loc_2019["freq"] >= 50
+                                ,  chart_loc_2019["Chart_Loc"]
+                                , "small_location")
+
+# np.where 2 conditions/conditionals
+                # if overlap, and location has less than 50 charts, name it "less than 50"
+                chart_loc_2020_overlap["location_new"] = np.where(
+                                                (chart_loc_2020_overlap["location"] != "non_overlap") & (chart_loc_2020_overlap["Chart_Loc_new"] == "small_location")
+                                                ,  "small_location"
+                                                , chart_loc_2020_overlap["location"])
+
+# find overlap between two lists so that we can mark all non-overlap as "other"
+                # https://stackoverflow.com/a/21175114/5825523
+                overlap = pd.Series(np.intersect1d(chart_loc_2019.values, chart_loc_2020.values))
+                overlap = pd.DataFrame(overlap)
+                overlap.columns = ['Chart_Loc']
+
+# produce a frequency count for each location, so i can filter using some count threshhold and decrease cardinality
+                chart_loc_2019["freq"] = chart_loc_2019.groupby("Chart_Loc")["Chart_Loc"].transform('count')
+
+# drop rows where chart_loc = non_overlap
+                df_2019 = df_2019[df_2019['chart_loc'] != "non_overlap"]
+
+# check for nulls
+                print(df_2019.isnull().sum())
+
+# any column has na, drop row
+                df = df_2019.dropna()
+
+# dummy the cats. Do not dummy the dummies
+                x = pd.get_dummies(df_2019, columns=cat_cols)              
+
+
+# give column name
+                predicted_df.columns = ['predicted']
+
+
+# count rows
+                row_count = predictions_joined.shape[0]  # row count
+
+# search if df column contains string
+                df_2020['chart_loc'].str.contains(Garth').any()
+
+# add column of 0s
+                df['zeroes'] = 0
+
+# write a list to txt
+file_write = "L:/list_of_received_charts.txt"
+with open(file_write, "w") as f:
+    f.write("file_name\n")
+    for item in files_in_dir:
+        f.write(item+"\n")
+
+# distinct a list, tho you lose order
+                my_list = list(set(my_list))
+
+
+# create new column called new_column
+# taking from original_column, only the first row
+# all other rows in new_column = nan
+                df["new_column"] = df.loc[:0, "original_column"]
+# replace nan with ''
+                df["new_column"] = df["new_column"].fillna('')
+
+
+determine filesize of everything in dir
+                import os
+                filepath = "//Corp/FS/zzz/"
+                for file in os.listdir(filepath):
+                                kb = os.path.getsize(filepath + file)
+                                print(kb)
+                                
+
+list all files in immediate subdirectory, https://stackoverflow.com/a/10989155/5825523
+                import os
+                outbound = "J:/MedicaIT/zzz/Outbound"              
+                immediate_subfolder = next(os.walk(outbound))[1]
+
+                subfolders = []
+                for sub in immediate_subfolder:
+                                subfolder = os.path.join(outbound, sub)
+                                subfolders.append(subfolder)
+
+                for subfolder in subfolders:
+                                for file in os.listdir(subfolder):
+                                                if file.endswith(".txt"):
+                                                                print(file)
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+
+Confidentiality Notice: The information contained in this message may be privileged and confidential and protected from disclosure. If the reader of this message is not the intended recipient, or an employee or agent responsible for delivering this message to the intended recipient, you are hereby notified that any dissemination, distribution, or copying of this communication is strictly prohibited. If you have received this communication in error, please notify us immediately by replying to the message and deleting it from your computer. Thank you. 
